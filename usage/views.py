@@ -15,9 +15,11 @@ class EnergyUsageBaseView(TemplateView):
         return context
 
 
-class EnergyIndexView(EnergyUsageBaseView, ListView):
+class EnergyIndexView(ListView, EnergyUsageBaseView):
     """Energy usage index view."""
     context_object_name = "items"
+    model = EnergyUsage
+    queryset = model.objects.all()
     template_name = "index.html"
     title = "Index"
 

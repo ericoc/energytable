@@ -1,40 +1,37 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block css %}
-    .highcharts-container text { stroke: var(--bs-light); }
-{% endblock css %}
 {% block main %}
-    <div id="water-chart"></div>
+    <div id="energy-chart"></div>
     <script src="{% static '/highcharts/highcharts.js' %}"></script>
 {% endblock main %}
 {% block scripts %}
-    const waterUsageByDay = []
+    const energyUsageByDay = []
     const xhr = new XMLHttpRequest()
     xhr.open("GET", "/api/usage/?format=json")
     xhr.onreadystatechange = async () => {
         if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-            let waterUsageData = JSON.parse(xhr.responseText)
-            for (const day of Object.values(waterUsageData)) {
-                waterUsageByDay.push([DateTime.fromISO(day.date).toMillis(), day.gallons])
+            let energyUsageData = JSON.parse(xhr.responseText)
+            for (const day of Object.values(energyUsageData)) {
+                energyUsageByDay.push([DateTime.fromISO(day.hour).toMillis(), day.kwh])
             }
-            const waterHighChart = new Highcharts.Chart({
-                title: {  style: { color: '#f8f9fa' }, text: 'Water Usage' },
+            const energyHighChart = new Highcharts.Chart({
+                title: {  style: { color: '#f8f9fa' }, text: 'Energy Usage' },
                 subtitle: {  style: { color: '#f8f9fa' }, text: document.ontouchstart === undefined ? 'Click and drag in the plot area to zoom in' : 'Pinch the chart to zoom in' },
                 chart: {
                     backgroundColor: '#212529',
-                    renderTo: 'water-chart',
+                    renderTo: 'energy-chart',
                     zoomType: 'x'
                 },
-                xAxis: { title: { text: 'Date' }, type: 'datetime' },
-                yAxis: { title: { text: 'Gallons' } },
+                xAxis: { title: { text: 'Hour' }, type: 'datetime' },
+                yAxis: { title: { text: 'Kilowatt-hours (kWh)' } },
                 series: [{
-                    data: waterUsageByDay,
-                    name: 'Gallons',
+                    data: energyUsageByDay,
+                    name: 'kWh',
                     states: { hover: { lineWidthPlus: 0 } },
                     type: 'line'
-                }]
+                }],
+                time: { timezone: 'America/New_York' }
             })
-            Highcharts.setOptions({ global: { useUTC: false } })
         }
     }
     xhr.send()
