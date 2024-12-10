@@ -9,6 +9,7 @@ settings.py
 *.pyc
 *.xls
 *.xlsx
+*.zip
 __pycache__
 /pycharm.run/
 bootstrap/
