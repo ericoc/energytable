@@ -19,5 +19,5 @@ class EnergyUsage(models.Model):
     class Meta:
         managed = True
         db_table = "usage"
-        ordering = ("-hour",)
+        ordering = ("hour",)
         verbose_name = verbose_name_plural = "Energy Usage"
