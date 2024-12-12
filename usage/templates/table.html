@@ -2,11 +2,11 @@
 {% load static %}
 {% block main %}
     <div class="container-lg">
-        <table class="display table table-borderless table-dark table-responsive table-sm table-striped" id="waterTable">
+        <table class="display table table-borderless table-dark table-hover table-responsive table-sm table-striped" id="energyTable">
             <thead class="h6">
                 <tr>
-                    <th title="Date">Date</th>
-                    <th title="Gallons">Gallons</th>
+                    <th title="Hour">Hour</th>
+                    <th title="kWh">kWh</th>
                 </tr>
             </thead>
             <tbody>
@@ -18,13 +18,13 @@
             -->
             </tbody>
             <tfoot class="h6">
-                <tr class="table-group-divider" id="page-total-row">
+                <tr class="table-group-divider">
                     <td><b>Total</b>:</td>
-                    <td id="page-gallons"></td>
+                    <td id="page-total"></td>
                 </tr>
                 <tr id="all-total-row">
                     <td><b>All</b>:</td>
-                    <td id="total-gallons"></td>
+                    <td id="all-total"></td>
                 </tr>
             </tfoot>
         </table>
@@ -34,44 +34,49 @@
     <script src="{% static 'datatables/sum.js' %}"></script>
 {% endblock main %}
 {% block scripts %}
-    const pageGallonsNode = document.getElementById('page-gallons')
-    const totalGallonsNode = document.getElementById('total-gallons')
-    async function footerTotal (api, col=1, digits=4) {
-        let pageGallons = DataTable.render.number(',', '.', digits).display(api.column(col, {page: 'current'}).data().sum())
-        pageGallonsNode.innerHTML = `<code class="fw-bolder" title="Total: ${pageGallons} Gallons">${pageGallons}</code>`
-        pageGallonsNode.title = `Total: ${pageGallons} Gallons (on this page)`
-        let totalGallons = DataTable.render.number(',', '.', digits).display(api.column(col).data().sum())
-        totalGallonsNode.innerHTML = `<code class="fw-bolder">${totalGallons}</code>`
-        totalGallonsNode.title = `All: ${totalGallons} Total Gallons`
+    const pageTotalNode = document.getElementById('page-total')
+    const allTotalNode = document.getElementById('all-total')
+    async function footerTotal (api, col=1, digits=2) {
+        let pageEnergy = DataTable.render.number(',', '.', digits).display(api.column(col, {page: 'current'}).data().sum())
+        pageTotalNode.innerHTML = `<code class="fw-bolder" title="Total: ${pageEnergy} kWh">${pageEnergy}</code>`
+        pageTotalNode.title = `Total: ${pageEnergy} kWh (on this page)`
+        let totalEnergy = DataTable.render.number(',', '.', digits).display(api.column(col).data().sum())
+        allTotalNode.innerHTML = `<code class="fw-bolder">${totalEnergy}</code>`
+        allTotalNode.title = `All: ${totalEnergy} Total kWh`
     }
-    const exportFileName = 'WaterTable'
-    const resultName = 'days'
-    new DataTable('#waterTable', {
+    const exportFileName = 'EnergyTable'
+    const resultName = 'hours'
+    new DataTable('#energyTable', {
         ajax: {
             url: '/api/usage/?format=json',
             dataSrc: ''
         },
         columns: [
             {
-                data: 'date',
-                render: DataTable.render.date('yyyy-MM-dd', 'DDDD', 'en')
+                data: 'hour',
+                render: DataTable.render.datetime('ff'),
+                searchBuilderType: 'luxon',
+                type: 'luxon'
+                // 2024-12-07T23:00:00-05:00
             },
             {
-                data: 'gallons',
+                data: 'kwh',
                 render: (data, type) => {
                     if (type === 'display') {
-                        let gallonText = 'primary'
-                        if (data > 100) {
-                            gallonText = 'danger'
-                        } else if (data > 75) {
-                            gallonText = 'warning'
-                        } else if (data > 50) {
-                            gallonText = 'info'
+                        let energyText = 'primary'
+                        if (data > 1) {
+                            energyText = 'danger'
+                        } else if (data > 0.75) {
+                            energyText = 'warning'
+                        } else if (data > 0.5) {
+                            energyText = 'info'
                         }
-                        return `<code class="fw-bold text-${gallonText}-emphasis" title="${data} gallons">${data}</code>`
+                        return `<code class="fw-bold text-${energyText}-emphasis" title="${data} kWh">${data}</code>`
                     }
                     return data
-                }
+                },
+                searchBuilderType: 'num',
+                type: 'num'
             }
         ],
         footerCallback: async function () {
@@ -122,11 +127,12 @@
             bottomEnd: 'info'
         },
         lengthMenu: [
-            1, 2, 3, 4, 5, 6, {label: `7 *`, value: 7}, 8, 9,
-            10, 14, 21, 30, 45, 60, 90, 120, 150, 180, 210, 240, 270,
-            300, 330, 365, {label: 'All', value: -1}
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, {label: `12 *`, value: 12},
+            13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 36, 48, 72, 96,
+            {label: 'All', value: -1}
         ],
         order: [[0, 'desc']],
-        pageLength: 7,
+        pageLength: 12,
+        stateSave: true
     })
 {% endblock scripts %}
